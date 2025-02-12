@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -12,19 +15,9 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    password_hash: {
-      type: String,
-      required: true,
-    },
-    phone: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    address: {
-      type: String,
-      required: true,
-    },
+    password_hash: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
+    address: { type: String, required: true },
     user_type: {
       type: String,
       enum: ["customer", "driver", "admin"],
@@ -34,20 +27,18 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    created_at: {
-      type: Date,
-      default: Date.now,
-    },
-    updated_at: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
-    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    timestamps: true,
+    discriminatorKey: "user_type",
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
   }
 );
 
+// Hash the password before saving
 userSchema.pre("save", async function (next) {
   if (this.isModified("password_hash")) {
     this.password_hash = await bcrypt.hash(this.password_hash, 10);
@@ -55,8 +46,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// Compare Password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password_hash);
 };
 
+// Abstract Model
 export const User = mongoose.model("User", userSchema);
