@@ -9,15 +9,21 @@ const driverSchema = new mongoose.Schema(
       default: "inactive",
     },
     last_payment_date: { type: Date },
-    vehicle_info: {
-      type: String,
-      required: true,
-    },
+
     license_number: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      uppercase: true,
     },
+
+    // 🖼️ Optional license image (for verification purposes)
+    license_image: {
+      type: String,
+      required: false,
+    },
+
     current_location: {
       type: {
         type: String,
@@ -30,6 +36,13 @@ const driverSchema = new mongoose.Schema(
       },
     },
     is_available: { type: Boolean, default: false },
+
+    vehicle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vehicle",
+      required: true,
+      unique: true,
+    },
   },
   {
     toJSON: {
@@ -38,10 +51,6 @@ const driverSchema = new mongoose.Schema(
     },
   }
 );
-
-driverSchema.virtual("driver_id").get(function () {
-  return this._id;
-});
 
 driverSchema.index({ current_location: "2dsphere" });
 
