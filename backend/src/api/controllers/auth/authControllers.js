@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.js";
-import { Customer } from "../models/customer.js";
-import { Driver } from "../models/driver.js";
-import { Admin } from "../models/admin.js";
+import { User } from "../../models/user.js";
+import { Customer } from "../../models/customer.js";
+import { Driver } from "../../models/driver.js";
+import { Admin } from "../../models/admin.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
