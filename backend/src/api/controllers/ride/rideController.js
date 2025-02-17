@@ -1,5 +1,5 @@
-import { Ride } from '../models/ride.js';
-import { Driver } from '../models/driver.js';
+import  Ride  from '../../models/ride.js';
+import { Driver } from '../../models/driver.js';
 
 class RideController {
   async requestRide(req, res) {
@@ -67,3 +67,5 @@ class RideController {
     }
   }
 }
+
+export default new RideController();
