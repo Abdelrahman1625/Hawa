@@ -1,11 +1,11 @@
-import { User } from '../models/user.js';
-import { Customer } from '../models/customer.js';
-import { Driver } from '../models/driver.js';
-import { Admin } from '../models/admin.js';
-import { Vehicle } from '../models/vehicle.js';
+import { User } from '../../models/user.js';
+import { Customer } from '../../models/customer.js';
+import { Driver } from '../../models/driver.js';
+import { Admin } from '../../models/admin.js';
+import  Ride from '../../models/ride.js';
 
 class UserController {
-  async createUser(req, res) {
+  async createUser(req, res, next) {
     try {
       const { user_type, ...userData } = req.body;
       
@@ -33,12 +33,27 @@ class UserController {
           break;
       }
 
-      await newUser.save();
-      res.status(201).json(newUser);
+      //check if user already exist
+      const existingUser = await User.findOne({ email });
+      if(existingUser) {
+        return res.status(400).
+        json({ message: 'User already exists'});
+      }
+      //save usr to database
+      const savedUser = await newUser.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: savedUser
+      });
+
     } catch (error) {
-      res.status(500).json({ message: 'User creation failed', error: error.message });
+      res.status(500)
+      .json({ message: 'User creation failed', error: error.message });
+      next(error);
     }
-  }
+  };
 
   async getProfile(req, res) {
     try {
@@ -58,3 +73,5 @@ class UserController {
     }
   }
 }
+
+export default new UserController();
