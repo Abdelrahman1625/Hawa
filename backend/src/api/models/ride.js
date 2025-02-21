@@ -1,69 +1,56 @@
 import mongoose from "mongoose";
 
-const rideSchema = new mongoose.Schema(
-  {
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      auto: true,
-    },
-    customer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    driver: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    pickup_location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        default: "Point",
-      },
-      coordinates: {
-        type: [Number],
-        required: true,
-      },
-    },
-    dropoff_location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        default: "Point",
-      },
-      coordinates: {
-        type: [Number],
-        required: true,
-      },
-    },
-    fare_amount: {
-      type: mongoose.Schema.Types.Decimal128,
-      required: true,
-      get: (v) => parseFloat(v),
-    },
-    payment_status: {
+const rideSchema = new mongoose.Schema({
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  driver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Driver',
+    required: false, // Initially, a driver may not be assigned
+  },
+  pickup_location: {
+    type: {
       type: String,
-      enum: ["pending", "completed", "failed", "cancelled"],
-      default: "pending",
+      enum: ['Point'],
+      required: true,
     },
-    ride_status: {
-      type: String,
-      enum: ["requested", "accepted", "in_progress", "completed", "cancelled"],
-      default: "requested",
-    },
-    ride_date: {
-      type: Date,
-      default: Date.now,
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
     },
   },
-  {
-    toJSON: { getters: true },
-  }
-);
+  dropoff_location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+    },
+  },
+  ride_status: {
+    type: String,
+    enum: ['requested', 'accepted', 'in_progress', 'completed', 'cancelled'],
+    default: 'requested',
+  },
+  fare: {
+    type: Number,
+    required: false,
+  },
+  ride_date: {
+    type: Date,
+    default: Date.now,
+  },
+}, { timestamps: true });
 
-// Add 2D index for geospatial queries (e.g., finding nearby rides)
-rideSchema.index({ pickup_location: "2dsphere", dropoff_location: "2dsphere" });
+rideSchema.index({ pickup_location: '2dsphere' });
+rideSchema.index({ dropoff_location: '2dsphere' });
 
-export const Ride = mongoose.model("Ride", rideSchema);
+const Ride = mongoose.model('Ride', rideSchema);
+export default Ride;
+
