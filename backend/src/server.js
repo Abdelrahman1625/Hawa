@@ -2,8 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { auth } from './api/middlewares/auth.js';
-import { authorize } from './api/middlewares/auth.js';
+import { auth, authorize } from './api/middlewares/auth.js';
 import connectDB from './config/database.js';
 import authRoutes from './api/routes/authRoutes.js';
 import userRoutes from './api/routes/userRoutes.js';
@@ -15,21 +14,22 @@ import adminRoutes from './api/routes/adminRoutes.js';
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+
+// Middleware
+app.use(express.json()); // Ensure req.body is parsed properly
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Enable CORS
 
 // Connect to MongoDB
 connectDB();
 
-app.use(cors());
-const router = express.Router();
-
 // Routes
 app.use('/api/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/rides', rideRoutes);
-router.use('/payments', paymentRoutes);
-router.use('/reviews', reviewRoutes);
-router.use('/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/rides', rideRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Protected Routes
 app.use('/api/admin', auth, authorize('admin'), adminRoutes);

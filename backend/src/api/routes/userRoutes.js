@@ -11,7 +11,7 @@ router.post('/register', validateUserCreation, UserController.createUser);
 // Protected routes
 router.use(authorize);
 router.get('/profile', UserController.getProfile);
-//router.put('/profile', validateProfileUpdate, UserController.updateProfile);
+router.put('/profile', validateProfileUpdate, UserController.updateProfile);
 //router.put('/password', UserController.changePassword);
 //router.delete('/deactivate', UserController.deactivateAccount);
 

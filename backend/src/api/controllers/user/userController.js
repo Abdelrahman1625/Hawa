@@ -57,10 +57,15 @@ class UserController {
 
   async getProfile(req, res) {
     try {
-      const user = await User.findById(req.user.id);
-      res.json(user);
+      const user = req.user;
+      //const user = await User.findById(req.user.id);
+      if(!user) {
+        return res.status(404).json({ message: "User Not Found", error: error.message });
+      }
+      res.status(200).json(user);
     } catch (error) {
-      res.status(500).json({ message: 'Profile fetch failed', error: error.message });
+      res.status(500)
+      .json({ message: 'Profile fetch failed', error: error.message });
     }
   }
 
