@@ -15,3 +15,4 @@ router.get('/history', RideController.getRideHistory);
 // router.post('/:id/cancel', RideController.cancelRide);
 
 export default router;
+

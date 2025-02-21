@@ -64,6 +64,7 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.js';
 
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // ✅ Authentication Middleware
@@ -100,3 +101,4 @@ export const authorize = (...roles) => {
         next();
     };
 };
+

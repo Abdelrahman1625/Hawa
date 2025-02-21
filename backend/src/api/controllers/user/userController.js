@@ -2,6 +2,7 @@ import { User } from '../../models/user.js';
 import { Customer } from '../../models/customer.js';
 import { Driver } from '../../models/driver.js';
 import { Admin } from '../../models/admin.js';
+
 import  Ride from '../../models/ride.js';
 
 class UserController {
@@ -14,6 +15,7 @@ class UserController {
         case 'customer':
           newUser = new Customer({
             ...userData,
+
             wallet_balance: 0,
             loyalty_points: 0
           });
@@ -80,3 +82,4 @@ class UserController {
 }
 
 export default new UserController();
+

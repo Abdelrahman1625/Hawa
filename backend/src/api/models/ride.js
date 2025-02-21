@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const rideSchema = new mongoose.Schema({
   customer: {
@@ -53,3 +53,4 @@ rideSchema.index({ dropoff_location: '2dsphere' });
 
 const Ride = mongoose.model('Ride', rideSchema);
 export default Ride;
+
