@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { auth, authorize } from './api/middlewares/auth.js';
+import { protect } from './api/middlewares/authMiddelware.js';
 import connectDB from './config/database.js';
 import authRoutes from './api/routes/authRoutes.js';
 import userRoutes from './api/routes/userRoutes.js';
