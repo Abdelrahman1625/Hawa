@@ -67,7 +67,7 @@ import { Admin } from '../models/admin.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ✅ Improved Authentication Middleware
+// Improved Authentication Middleware
 export const auth = asyncHandler(async (req, res, next) => {
   try {
     let token;
@@ -135,14 +135,23 @@ export const auth = asyncHandler(async (req, res, next) => {
   }
 });
 
-// ✅ Role-Based Authorization Middleware
-export const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.user_type)) {
-      return res
-        .status(403)
-        .json({ error: "Unauthorized access. Insufficient permissions." });
+
+// Role-based authorization middleware
+export const adminMiddleware = (...allowedTypes) => {
+  return asyncHandler(async (req, res, next) => {
+    if (!req.user || !allowedTypes.includes(req.user.user_type)) {
+      res.status(403);
+      throw new Error(`Access denied. ${req.user?.user_type || 'Unknown'} not authorized.`);
     }
     next();
-  };
+  });
 };
+
+// Verified email middleware
+export const requireVerified = asyncHandler(async (req, res, next) => {
+  if (!req.user.isVerified) {
+    res.status(403);
+    throw new Error("Please verify your email address first");
+  }
+  next();
+});

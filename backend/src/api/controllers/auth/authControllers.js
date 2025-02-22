@@ -27,7 +27,8 @@ const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "24h" });
 };
 
-export const register = async (req, res) => {
+//Register user
+export const registerUser = async (req, res) => {
   try {
     const {
       name,
@@ -114,7 +115,8 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = asyncHandler(async (req, res) => {
+// Login user
+export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -156,7 +158,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 // Logout User
-export const logout = asyncHandler(async (req, res) => {
+export const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
     httpOnly: true,
@@ -167,3 +169,78 @@ export const logout = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
+// Get User Profile
+export const getUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password_hash");
+  
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
+});
+
+// Update User Profile
+export const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  const { name, phone, address } = req.body;
+  
+  user.name = name || user.name;
+  user.phone = phone || user.phone;
+  user.address = address || user.address;
+
+  const updatedUser = await user.save();
+
+  res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    phone: updatedUser.phone,
+    address: updatedUser.address,
+    user_type: updatedUser.user_type,
+  });
+});
+
+// verify user
+export const verifyUser = asyncHandler(async (req, res) => {
+  const { verificationToken } = req.params;
+
+  if (!verificationToken) {
+    return res.status(400).json({ message: "Invalid verification token" });
+  }
+  // hash the verification token --> because it was hashed before saving
+  const hashedToken = hashToken(verificationToken);
+
+  // find user with the verification token
+  const userToken = await Token.findOne({
+    verificationToken: hashedToken,
+    // check if the token has not expired
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    return res
+      .status(400)
+      .json({ message: "Invalid or expired verification token" });
+  }
+
+  //find user with the user id in the token
+  const user = await User.findById(userToken.userId);
+
+  if (user.isVerified) {
+    // 400 Bad Request
+    return res.status(400).json({ message: "User is already verified" });
+  }
+
+  // update user to verified
+  user.isVerified = true;
+  await user.save();
+  res.status(200).json({ message: "User verified" });
+});

@@ -1,11 +1,11 @@
 import express from "express";
 import ReviewController from "../controllers/review/reviewController.js";
-import { authorize } from "../middlewares/auth.js";
+import { adminMiddleware } from "../middlewares/auth.js";
 import { validateReview } from "../middlewares/validator.js";
 
 const router = express.Router();
 
-router.use(authorize);
+router.use(adminMiddleware);
 
 router.post("/", validateReview, ReviewController.createReview);
 router.get("/driver/:driver_id", ReviewController.getDriverReviews);

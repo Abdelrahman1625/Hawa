@@ -1,12 +1,16 @@
 import express from "express";
-import AdminController from "../controllers/admin/adminController.js";
-import { authorize, auth } from "../middlewares/auth.js";
+//import AdminController from "../controllers/admin/adminController.js";
+import { adminMidddleware , auth } from "../middlewares/auth.js";
 import { validateAdminActions } from "../middlewares/validator.js";
+import {
+  deleteUser,
+  getAllUser,
+} from "../controllers/admin/adminController.js";
 
 const router = express.Router();
 
 // Require authentication and admin authorization for all routes
-router.use(authorize, auth);
+router.use( adminMiddleware, auth);
 
 router.put(
   "/drivers/:id/status",

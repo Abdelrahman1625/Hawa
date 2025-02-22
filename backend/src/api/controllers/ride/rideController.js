@@ -1,4 +1,4 @@
-import Ride from "../../models/ride.js";
+import Ride from '../../models/ride.js';
 import { Driver } from "../../models/driver.js";
 
 class RideController {

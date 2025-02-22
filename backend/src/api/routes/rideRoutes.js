@@ -1,11 +1,11 @@
 import express from "express";
 import RideController from "../controllers/ride/rideController.js";
-import { authorize } from "../middlewares/auth.js";
+import { adminMiddleware } from "../middlewares/auth.js";
 import { validateRideRequest } from "../middlewares/validator.js";
 
 const router = express.Router();
 
-router.use(authorize);
+router.use(adminMiddleware);
 
 router.post("/request", validateRideRequest, RideController.requestRide);
 router.put("/:id/status", RideController.updateRideStatus);

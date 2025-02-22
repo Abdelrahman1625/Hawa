@@ -1,11 +1,11 @@
 import express from "express";
 import PaymentController from "../controllers/payment/paymentController.js";
-import { authorize } from "../middlewares/auth.js";
+import { adminMiddleware } from "../middlewares/auth.js";
 import { validatePayment } from "../middlewares/validator.js";
 
 const router = express.Router();
 
-router.use(authorize);
+router.use(adminMiddleware);
 
 router.post("/cash", validatePayment, PaymentController.processCashPayment);
 router.post("/profit", validatePayment, PaymentController.processProfitPayment);
