@@ -2,7 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import { auth, authorize } from "./api/middlewares/auth.js";
+import cookieParser from 'cookie-parser';
+
+//import { auth, authorize } from "./api/middlewares/auth.js";
 import connectDB from "./config/database.js";
 import authRoutes from "./api/routes/authRoutes.js";
 
@@ -15,6 +17,9 @@ import adminRoutes from "./api/routes/adminRoutes.js";
 dotenv.config();
 
 const app = express();
+
+// Middleware to parse cookies
+app.use(cookieParser());
 
 // Middleware
 app.use(express.json()); // Ensure req.body is parsed properly

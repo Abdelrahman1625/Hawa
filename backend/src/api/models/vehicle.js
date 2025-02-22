@@ -25,4 +25,4 @@ const vehicleSchema = new mongoose.Schema(
   }
 );
 
-export const Vehicle = User.discriminator("driver", vehicleSchema);
+export const Vehicle = User.discriminator("vechile", vehicleSchema);

@@ -1,10 +1,26 @@
 import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
+import cookieParser from 'cookie-parser';
 import { User } from "../../models/user.js";
 import { Customer } from "../../models/customer.js";
 import { Driver } from "../../models/driver.js";
 import { Admin } from "../../models/admin.js";
+import Token from '../../models/Token.js';
+import hashToken from "../../../helpers/hashToken.js";
+
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Helper to set cookie
+const setTokenCookie = (res, token) => {
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: "none",
+    secure: true,
+  });
+};
 
 // Helper function to generate JWT token
 const generateToken = (userId) => {
@@ -98,53 +114,56 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+export const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: "Invalid login credentials" });
-    }
-
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid login credentials" });
-    }
-
-    if (!user.is_active) {
-      return res.status(401).json({ error: "Account is deactivated" });
-    }
-
-    const token = generateToken(user._id);
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        user_type: user.user_type,
-      },
-    });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Please provide email and password");
   }
-};
 
-export const logout = async (req, res) => {
-  try {
-    res.json({ message: "Logged out successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  const user = await User.findOne({ email });
 
-export const getProfile = async (req, res) => {
-  try {
-    // req.user is set by auth middleware
-    res.json(req.user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!user) {
+    res.status(401);
+    throw new Error("Invalid credentials");
   }
-};
+
+  const isPasswordValid = await user.comparePassword(password);
+
+  if (!isPasswordValid) {
+    res.status(401);
+    throw new Error("Invalid credentials");
+  }
+
+  if (!user.is_active) {
+    res.status(401);
+    throw new Error("Account is deactivated");
+  }
+
+  const token = generateToken(user._id);
+  setTokenCookie(res, token);
+
+  res.status(200).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    user_type: user.user_type,
+    isVerified: user.isVerified,
+    token,
+  });
+});
+
+// Logout User
+export const logout = asyncHandler(async (req, res) => {
+  res.cookie("token", "", {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: "none",
+    secure: true,
+  });
+  res.status(200).json({ message: "Logged out successfully" });
+});
+
