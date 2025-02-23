@@ -17,7 +17,7 @@ router.post("/register", validateUserCreation, UserController.createUser);
 router.use(adminMiddleware);
 router.get("/profile", UserController.getProfile);
 router.put("/profile", validateProfileUpdate, UserController.updateProfile);
-//router.put('/password', UserController.changePassword);
-//router.delete('/deactivate', UserController.deactivateAccount);
+router.put('/password', UserController.changePassword);
+router.delete('/deactivate', UserController.deactivateAccount);
 
 export default router;

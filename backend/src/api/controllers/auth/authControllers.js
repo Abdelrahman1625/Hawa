@@ -1,13 +1,12 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 import { User } from "../../models/user.js";
 import { Customer } from "../../models/customer.js";
 import { Driver } from "../../models/driver.js";
 import { Admin } from "../../models/admin.js";
-import Token from '../../models/Token.js';
+import Token from "../../models/Token.js";
 import hashToken from "../../../helpers/hashToken.js";
-
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -172,7 +171,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
 // Get User Profile
 export const getUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password_hash");
-  
+
   if (user) {
     res.status(200).json(user);
   } else {
@@ -191,7 +190,7 @@ export const updateUser = asyncHandler(async (req, res) => {
   }
 
   const { name, phone, address } = req.body;
-  
+
   user.name = name || user.name;
   user.phone = phone || user.phone;
   user.address = address || user.address;

@@ -6,7 +6,7 @@ import {
   getUser,
   updateUser,
 } from "../controllers/auth/authControllers.js";
-
+import UserController from "../controllers/user/userController.js";
 import { auth, adminMiddleware, requireVerified } from "../middlewares/auth.js";
 
 import {
@@ -21,6 +21,17 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.get("/user", auth, getUser);
 router.patch("/user", auth, updateUser);
+router.put("/password", auth, UserController.changePassword);
+router.delete("/deactivate", auth, UserController.deactivateAccount);
+router.get(
+  "/admin/users",
+  auth,
+  adminMiddleware("admin"),
+  requireVerified,
+  getAllUsers
+);
+
+
 
 // admin route
 router.delete("/admin/users/:id", auth, adminMiddleware, deleteUser);
