@@ -5,10 +5,19 @@ import {
   logoutUser,
   getUser,
   updateUser,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  verifyUser,
+  userLoginStatus,
 } from "../controllers/auth/authControllers.js";
-import UserController from "../controllers/user/userController.js";
-import { auth, adminMiddleware, requireVerified } from "../middlewares/auth.js";
-
+//import UserController from "../controllers/user/userController.js";
+import {
+  auth,
+  adminMiddleware, 
+  requireVerified 
+} from "../middlewares/auth.js";
 import {
   deleteUser,
   getAllUsers,
@@ -21,22 +30,29 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.get("/user", auth, getUser);
 router.patch("/user", auth, updateUser);
-router.put("/password", auth, UserController.changePassword);
-router.delete("/deactivate", auth, UserController.deactivateAccount);
-router.get(
-  "/admin/users",
-  auth,
-  adminMiddleware("admin"),
-  requireVerified,
-  getAllUsers
-);
-
-
 
 // admin route
 router.delete("/admin/users/:id", auth, adminMiddleware, deleteUser);
 
 // get all users
 router.get("/admin/users", auth, requireVerified, getAllUsers);
+
+// login status
+router.get("/login-status", userLoginStatus);
+
+// email verification
+router.post("/verify-email", auth, verifyEmail);
+
+// veriify user --> email verification
+router.post("/verify-user/:verificationToken", verifyUser);
+
+// forgot password
+router.post("/forgot-password", forgotPassword);
+
+//reset password
+router.post("/reset-password/:resetPasswordToken", resetPassword);
+
+// change password ---> user must be logged in
+router.patch("/change-password", auth , changePassword);
 
 export default router;
