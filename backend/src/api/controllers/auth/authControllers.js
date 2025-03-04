@@ -1,12 +1,14 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import cookieParser from "cookie-parser";
+import crypto from "crypto";
 import { User } from "../../models/user.js";
 import { Customer } from "../../models/customer.js";
 import { Driver } from "../../models/driver.js";
 import { Admin } from "../../models/admin.js";
 import Token from "../../models/Token.js";
 import hashToken from "../../../helpers/hashToken.js";
+import sendEmail from "../../../helpers/sendEmail.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -156,6 +158,24 @@ export const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
+// login status
+export const userLoginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    // 401 Unauthorized
+    res.status(401).json({ message: "Not authorized, please login!" });
+  }
+  // verify the token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  if (decoded) {
+    res.status(200).json(true);
+  } else {
+    res.status(401).json(false);
+  }
+});
+
 // Logout User
 export const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
@@ -242,4 +262,168 @@ export const verifyUser = asyncHandler(async (req, res) => {
   user.isVerified = true;
   await user.save();
   res.status(200).json({ message: "User verified" });
+});
+
+// Verify Email
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user.isVerified) {
+    res.status(400);
+    throw new Error("User already verified");
+  }
+
+  // Delete existing token if exists
+  await Token.deleteOne({ userId: user._id });
+
+  // Create verification token
+  const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+  const hashedToken = hashToken(verificationToken);
+
+  // Save token document
+  await Token.create({
+    userId: user._id,
+    token: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+  });
+
+  // Create verification URL
+  const verificationUrl = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
+
+  // Send verification email
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Email Verification",
+      template: "verifyEmail",
+      data: {
+        name: user.name,
+        verificationUrl,
+      },
+    });
+    res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email could not be sent");
+  }
+});
+
+// Change Password
+export const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    res.status(400);
+    throw new Error("Please provide old and new password");
+  }
+
+  const user = await User.findById(req.user._id);
+
+  const isPasswordValid = await user.comparePassword(oldPassword);
+  if (!isPasswordValid) {
+    res.status(401);
+    throw new Error("Old password is incorrect");
+  }
+
+  user.password_hash = newPassword;
+  await user.save();
+
+  res.status(200).json({ message: "Password changed successfully" });
+});
+
+// forgot password
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  // check if user exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    // 404 Not Found
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // see if reset token exists
+  let token = await Token.findOne({ userId: user._id });
+
+  // if token exists --> delete the token
+  if (token) {
+    await token.deleteOne();
+  }
+
+  // create a reset token using the user id ---> expires in 1 hour
+  const passwordResetToken = crypto.randomBytes(64).toString("hex") + user._id;
+
+  // hash the reset token
+  const hashedToken = hashToken(passwordResetToken);
+
+  await new Token({
+    userId: user._id,
+    passwordResetToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
+  }).save();
+
+  // reset link
+  const resetLink = `${process.env.CLIENT_URL}/reset-password/${passwordResetToken}`;
+
+  // send email to user
+  const subject = "Password Reset - Breezo";
+  const send_to = user.email;
+  const send_from = process.env.USER_EMAIL;
+  const reply_to = "noreply@noreply.com";
+  const template = "forgotPassword";
+  const name = user.name;
+  const url = resetLink;
+
+  try {
+    await sendEmail(subject, send_to, send_from, reply_to, template, name, url);
+    res.json({ message: "Email sent" });
+  } catch (error) {
+    console.log("Error sending email: ", error);
+    return res.status(500).json({ message: "Email could not be sent" });
+  }
+});
+
+// reset password
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { resetPasswordToken } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
+  // hash the reset token
+  const hashedToken = hashToken(resetPasswordToken);
+
+  // check if token exists and has not expired
+  const userToken = await Token.findOne({
+    passwordResetToken: hashedToken,
+    // check if the token has not expired
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    return res.status(400).json({ message: "Invalid or expired reset token" });
+  }
+
+  // find user with the user id in the token
+  const user = await User.findById(userToken.userId);
+
+  // update user password
+  user.password = password;
+  await user.save();
+
+  res.status(200).json({ message: "Password reset successfully" });
 });
