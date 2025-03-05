@@ -61,9 +61,9 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
-import { Customer } from '../models/customer.js';
-import { Driver } from '../models/driver.js';
-import { Admin } from '../models/admin.js';
+import { Customer } from "../models/customer.js";
+import { Driver } from "../models/driver.js";
+import { Admin } from "../models/admin.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -76,8 +76,8 @@ export const auth = asyncHandler(async (req, res, next) => {
     token = req.cookies.token;
 
     // Fallback to Authorization header if no cookie
-    if (!token && req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    if (!token && req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
     if (!token) {
@@ -90,11 +90,14 @@ export const auth = asyncHandler(async (req, res, next) => {
     // Get base user to determine type
     const baseUser = await User.findOne({
       _id: decoded.userId,
-      is_active: true,
+      // Skip is_active check for activation endpoint
+      ...(req.path !== "/active-account" && { is_active: true }),
     }).select("-password_hash");
 
     if (!baseUser) {
-      return res.status(401).json({ message: "User not found or account inactive" });
+      return res
+        .status(401)
+        .json({ message: "User not found or account inactive" });
     }
 
     // Get specific user type model
@@ -114,7 +117,9 @@ export const auth = asyncHandler(async (req, res, next) => {
     }
 
     if (!user) {
-      return res.status(404).json({ message: `${baseUser.user_type} not found` });
+      return res
+        .status(404)
+        .json({ message: `${baseUser.user_type} not found` });
     }
 
     // Attach user and token to request
@@ -123,25 +128,32 @@ export const auth = asyncHandler(async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401)
-      .json({ message: "Token expired, please log in again" });
+      return res
+        .status(401)
+        .json({ message: "Token expired, please log in again" });
     } else if (error.name === "JsonWebTokenError") {
-      return res.status(401)
-      .json({ message: "Invalid token" , error: error.message});
+      return res
+        .status(401)
+        .json({ message: "Invalid token", error: error.message });
     } else {
-      return res.status(401)
-      .json({ message: "Not authorized, token validation failed", error: error.message });
+      return res
+        .status(401)
+        .json({
+          message: "Not authorized, token validation failed",
+          error: error.message,
+        });
     }
   }
 });
-
 
 // Role-based authorization middleware
 export const adminMiddleware = (...allowedTypes) => {
   return asyncHandler(async (req, res, next) => {
     if (!req.user || !allowedTypes.includes(req.user.user_type)) {
       res.status(403);
-      throw new Error(`Access denied. ${req.user?.user_type || 'Unknown'} not authorized.`);
+      throw new Error(
+        `Access denied. ${req.user?.user_type || "Unknown"} not authorized.`
+      );
     }
     next();
   });
