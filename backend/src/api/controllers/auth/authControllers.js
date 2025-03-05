@@ -428,7 +428,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Password reset successfully" });
 });
 
-// Deactive Account
+// DeActive Account
 export const DeActiveAccount = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 

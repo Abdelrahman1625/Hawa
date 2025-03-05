@@ -40,8 +40,6 @@ router.get("/login-status", userLoginStatus);
 
 // email verification
 router.post("/verify-email", auth, verifyEmail);
-router.put("/DeActive-account", auth, DeActiveAccount);
-router.put("/active-account", auth, ActiveAccount);
 
 // verify user --> email verification
 router.post("/verify-user/:verificationToken", verifyUser);
@@ -54,5 +52,7 @@ router.post("/reset-password/:resetPasswordToken", resetPassword);
 
 // change password ---> user must be logged in
 router.put("/password", auth, changePassword);
+router.put("/DeActive-account", auth, DeActiveAccount);
+router.put("/active-account", auth, ActiveAccount);
 
 export default router;
