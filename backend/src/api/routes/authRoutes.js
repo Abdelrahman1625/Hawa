@@ -52,6 +52,7 @@ router.post("/reset-password/:resetPasswordToken", resetPassword);
 
 // change password ---> user must be logged in
 router.put("/password", auth, changePassword);
+router.put("/updateUser", auth, updateUser);
 router.put("/DeActive-account", auth, DeActiveAccount);
 router.put("/active-account", auth, ActiveAccount);
 
