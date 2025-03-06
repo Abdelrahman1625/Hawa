@@ -209,8 +209,26 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  const { name, phone, address } = req.body;
+  const { name, phone, address, user_type, email, password } = req.body;
 
+  // Prevent user_type modification
+  if (user_type) {
+    res.status(400);
+    throw new Error("User type cannot be modified");
+  }
+
+  // Prevent email modification
+  if (email) {
+    res.status(400);
+    throw new Error("Email cannot be modified");
+  }
+
+  if (password) {
+    res.status(400);
+    throw new Error("Password cannot be modified");
+  }
+
+  // Only update allowed fields
   user.name = name || user.name;
   user.phone = phone || user.phone;
   user.address = address || user.address;
@@ -218,7 +236,6 @@ export const updateUser = asyncHandler(async (req, res) => {
   const updatedUser = await user.save();
 
   res.status(200).json({
-    _id: updatedUser._id,
     name: updatedUser.name,
     email: updatedUser.email,
     phone: updatedUser.phone,
