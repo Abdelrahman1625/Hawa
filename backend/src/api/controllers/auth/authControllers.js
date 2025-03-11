@@ -166,14 +166,16 @@ export const userLoginStatus = asyncHandler(async (req, res) => {
     // 401 Unauthorized
     res.status(401).json({ message: "Not authorized, please login!" });
   }
-  // verify the token
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-  if (decoded) {
-    res.status(200).json(true);
-  } else {
-    res.status(401).json(false);
+  try {
+    // verify the token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded) {
+      return res.status(200).json(true);
+    }
+  } catch (error) {
+    return res.status(401).json(false);
   }
+  res.status(401).json(false);
 });
 
 // Logout User
@@ -253,6 +255,10 @@ export const verifyUser = asyncHandler(async (req, res) => {
   //find user with the user id in the token
   const user = await User.findById(userToken.userId);
 
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
   if (user.isVerified) {
     // 400 Bad Request
     return res.status(400).json({ message: "User is already verified" });
@@ -261,6 +267,10 @@ export const verifyUser = asyncHandler(async (req, res) => {
   // update user to verified
   user.isVerified = true;
   await user.save();
+
+  //delete the used token
+  await userToken.deleteOne();
+
   res.status(200).json({ message: "User verified" });
 });
 
@@ -325,6 +335,11 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user._id);
 
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  
   const isPasswordValid = await user.comparePassword(oldPassword);
   if (!isPasswordValid) {
     res.status(401);
