@@ -2,13 +2,12 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 
 //import { auth, authorize } from "./api/middlewares/auth.js";
 import connectDB from "./config/database.js";
 import authRoutes from "./api/routes/authRoutes.js";
-
-//import userRoutes from "./api/routes/userRoutes.js";
+import userRoutes from "./api/routes/userRoutes.js";
 import rideRoutes from "./api/routes/rideRoutes.js";
 import paymentRoutes from "./api/routes/paymentRoutes.js";
 import reviewRoutes from "./api/routes/reviewRoutes.js";
@@ -31,7 +30,7 @@ connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
-//app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/rides", rideRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);

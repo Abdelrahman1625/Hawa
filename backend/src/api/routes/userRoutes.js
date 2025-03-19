@@ -1,23 +1,24 @@
-// import express from "express";
+import express from "express";
+import { User } from "../models/user.js";
+import { auth } from "../middlewares/auth.js";
 
-// import UserController from "../controllers/user/userController.js";
-// import { adminMiddleware } from "../middlewares/auth.js";
-// import {
-//   validateUserCreation,
-//   validateProfileUpdate,
-// } from "../middlewares/validator.js";
+const router = express.Router();
 
-// const router = express.Router();
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const userId = req.user._id; // Using _id from MongoDB
+    const user = await User.findById(userId)
+      .select("-password_hash -_id -__v -customer_id -id"); // Exclude password and all IDs
 
-// // Public routes
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-// router.post("/register", validateUserCreation, UserController.createUser);
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-// // Protected routes
-// router.use(adminMiddleware);
-// router.get("/profile", UserController.getProfile);
-// router.put("/profile", validateProfileUpdate, UserController.updateProfile);
-// router.put('/password', UserController.changePassword);
-// router.delete('/deactivate', UserController.deactivateAccount);
-
-// export default router;
+export default router;

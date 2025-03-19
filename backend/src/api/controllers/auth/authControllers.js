@@ -211,8 +211,26 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  const { name, phone, address } = req.body;
+  const { name, phone, address, user_type, email, password } = req.body;
 
+  // Prevent user_type modification
+  if (user_type) {
+    res.status(400);
+    throw new Error("User type cannot be modified");
+  }
+
+  // Prevent email modification
+  if (email) {
+    res.status(400);
+    throw new Error("Email cannot be modified");
+  }
+
+  if (password) {
+    res.status(400);
+    throw new Error("Password cannot be modified");
+  }
+
+  // Only update allowed fields
   user.name = name || user.name;
   user.phone = phone || user.phone;
   user.address = address || user.address;
@@ -220,7 +238,6 @@ export const updateUser = asyncHandler(async (req, res) => {
   const updatedUser = await user.save();
 
   res.status(200).json({
-    _id: updatedUser._id,
     name: updatedUser.name,
     email: updatedUser.email,
     phone: updatedUser.phone,
@@ -326,21 +343,25 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 
 // Change Password
 export const changePassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
 
-  if (!oldPassword || !newPassword) {
+  if (!currentPassword || !newPassword) {
     res.status(400);
     throw new Error("Please provide old and new password");
   }
 
   const user = await User.findById(req.user._id);
 
+<<<<<<< HEAD
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
   
   const isPasswordValid = await user.comparePassword(oldPassword);
+=======
+  const isPasswordValid = await user.comparePassword(currentPassword);
+>>>>>>> 726a4f1f5bc1315dfcd8d0c3dd486b659d3d64e5
   if (!isPasswordValid) {
     res.status(401);
     throw new Error("Old password is incorrect");
@@ -441,4 +462,50 @@ export const resetPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   res.status(200).json({ message: "Password reset successfully" });
+});
+
+// DeActive Account
+export const DeActiveAccount = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  user.is_active = false;
+  await user.save();
+
+  res.status(200).json({ message: "Account deactivated successfully" });
+});
+
+// Active Account
+export const ActiveAccount = asyncHandler(async (req, res) => {
+  let user;
+
+  // Find user in the appropriate model based on user type
+  switch (req.user.user_type) {
+    case "customer":
+      user = await Customer.findById(req.user._id);
+      break;
+    case "driver":
+      user = await Driver.findById(req.user._id);
+      break;
+    case "admin":
+      user = await Admin.findById(req.user._id);
+      break;
+    default:
+      res.status(400);
+      throw new Error("Invalid user type");
+  }
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  user.is_active = true;
+  await user.save();
+
+  res.status(200).json({ message: "Account activated successfully" });
 });

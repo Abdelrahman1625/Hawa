@@ -17,8 +17,7 @@ router.use(adminMiddleware, auth);
 router.put("/drivers/:id/status", validateAdminActions, updateDriverStatus);
 router.get("/stats", getSystemStats);
 router.put("/profit-percentage", validateAdminActions, manageProfitPercentage);
-
-router.delete("/users/:id", deleteUser);
-router.get("/users", getAllUsers);
+router.delete("/admin/users/:id", auth, adminMiddleware, deleteUser);
+router.get("/admin/users", auth, adminMiddleware, getAllUsers);
 
 export default router;
